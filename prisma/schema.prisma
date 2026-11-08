@@ -32,15 +32,17 @@ enum ExpenseStatus {
 }
 
 model User {
-  id           String       @id @default(cuid())
-  email        String       @unique
-  name         String
-  passwordHash String
-  createdAt    DateTime     @default(now())
-  memberships  Membership[]
-  sessions     Session[]
-  payments     Payment[]
-  expenses     Expense[]
+  id              String       @id @default(cuid())
+  email           String       @unique
+  name            String
+  passwordHash    String
+  createdAt       DateTime     @default(now())
+  memberships     Membership[]
+  sessions        Session[]
+  payments        Payment[]
+  expenses        Expense[]     @relation("ExpenseSubmission")
+  reviewedExpenses Expense[]    @relation("ExpenseReview")
+  paidExpenses    Expense[]     @relation("ExpensePayment")
 }
 
 model Company {
@@ -143,6 +145,8 @@ model Expense {
   companyId         String
   submittedById     String
   supplierId        String?
+  reviewedById      String?
+  paidById          String?
   category          String
   description       String
   amount            Decimal
@@ -151,10 +155,15 @@ model Expense {
   receiptName       String
   receiptStoredName String
   receiptType       String
+  reviewNote        String        @default("")
+  reviewedAt        DateTime?
+  paidAt            DateTime?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   company           Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  submittedBy       User          @relation(fields: [submittedById], references: [id], onDelete: Restrict)
+  submittedBy       User          @relation("ExpenseSubmission", fields: [submittedById], references: [id], onDelete: Restrict)
+  reviewedBy        User?         @relation("ExpenseReview", fields: [reviewedById], references: [id], onDelete: SetNull)
+  paidBy            User?         @relation("ExpensePayment", fields: [paidById], references: [id], onDelete: SetNull)
   supplier          Contact?      @relation(fields: [supplierId], references: [id], onDelete: SetNull)
 
   @@index([companyId, status])
