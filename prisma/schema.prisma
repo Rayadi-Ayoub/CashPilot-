@@ -32,28 +32,32 @@ enum ExpenseStatus {
 }
 
 model User {
-  id              String       @id @default(cuid())
-  email           String       @unique
-  name            String
-  passwordHash    String
-  createdAt       DateTime     @default(now())
-  memberships     Membership[]
-  sessions        Session[]
-  payments        Payment[]
-  expenses        Expense[]     @relation("ExpenseSubmission")
-  reviewedExpenses Expense[]    @relation("ExpenseReview")
-  paidExpenses    Expense[]     @relation("ExpensePayment")
+  id               String          @id @default(cuid())
+  email            String          @unique
+  name             String
+  passwordHash     String
+  createdAt        DateTime        @default(now())
+  memberships      Membership[]
+  sessions         Session[]
+  payments         Payment[]
+  expenses         Expense[]       @relation("ExpenseSubmission")
+  reviewedExpenses Expense[]       @relation("ExpenseReview")
+  paidExpenses     Expense[]       @relation("ExpensePayment")
+  cashAdjustments  CashAdjustment[]
 }
 
 model Company {
-  id          String       @id @default(cuid())
-  name        String
-  createdAt   DateTime     @default(now())
-  memberships Membership[]
-  contacts    Contact[]
-  invoices    Invoice[]
-  payments    Payment[]
-  expenses    Expense[]
+  id                 String           @id @default(cuid())
+  name               String
+  initialBalance     Decimal          @default(0)
+  initialBalanceSetAt DateTime?
+  createdAt          DateTime         @default(now())
+  memberships        Membership[]
+  contacts           Contact[]
+  invoices           Invoice[]
+  payments           Payment[]
+  expenses           Expense[]
+  cashAdjustments    CashAdjustment[]
 }
 
 model Membership {
@@ -168,4 +172,18 @@ model Expense {
 
   @@index([companyId, status])
   @@index([submittedById])
+}
+
+model CashAdjustment {
+  id             String   @id @default(cuid())
+  companyId      String
+  createdById    String
+  amount         Decimal
+  reason         String
+  adjustmentDate DateTime
+  createdAt      DateTime @default(now())
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdBy      User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([companyId, adjustmentDate])
 }

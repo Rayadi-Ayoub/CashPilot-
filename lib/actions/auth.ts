@@ -28,8 +28,12 @@ export async function register(formData: FormData) {
   const companyName = value(formData, "companyName");
   const email = value(formData, "email").toLowerCase();
   const password = value(formData, "password");
+  const initialBalance = value(formData, "initialBalance") || "0";
   if (!name || !companyName || !email || password.length < 8) {
     redirect("/register?error=Complete all fields. The password must contain at least 8 characters.");
+  }
+  if (!/^\d+(\.\d{1,2})?$/.test(initialBalance)) {
+    redirect("/register?error=Enter a non-negative opening balance with at most two decimal places.");
   }
   if (await db.user.findUnique({ where: { email } })) {
     redirect("/register?error=An account already exists for this email.");
@@ -40,7 +44,7 @@ export async function register(formData: FormData) {
       data: { name, email, passwordHash: await bcrypt.hash(password, 12) },
     });
     const company = await transaction.company.create({
-      data: { name: companyName, memberships: { create: { userId: user.id, role: Role.OWNER } } },
+      data: { name: companyName, initialBalance, initialBalanceSetAt: new Date(), memberships: { create: { userId: user.id, role: Role.OWNER } } },
     });
     return { user, company };
   });

@@ -16,7 +16,10 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
             <label>Company name<input name="companyName" required /></label>
           </div>
           <label>Email<input type="email" name="email" autoComplete="email" required /></label>
-          <label>Password <span className="field-hint">At least 8 characters</span><input type="password" name="password" autoComplete="new-password" minLength={8} required /></label>
+          <div className="form-grid">
+            <label>Password <span className="field-hint">At least 8 characters</span><input type="password" name="password" autoComplete="new-password" minLength={8} required /></label>
+            <label>Opening cash balance (DT)<input name="initialBalance" type="number" min="0" step="0.01" defaultValue="0.00" required /></label>
+          </div>
           <SubmitButton>Create company</SubmitButton>
         </form>
         <p className="auth-footer">Already registered? <Link href="/login">Sign in</Link></p>
