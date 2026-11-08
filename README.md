@@ -2,6 +2,10 @@
 
 CashPilot is a simple React/Next.js application for a small company's real cash balance, customer invoices, expenses, forecasts and isolated what-if scenarios. Amounts are shown in Tunisian dinars (DT/TND).
 
+## Commerce customization
+
+CashPilot is configured for **commerce**: a small shop selling on credit to business customers. On every overdue validated invoice with an outstanding balance, **Copy payment reminder** creates a short message containing the customer name, invoice number, due date and exact remaining amount. The shop pastes this message into its usual email or messaging application; CashPilot does not send messages or integrate with a bank.
+
 ## Requirements
 
 - Windows with PowerShell
@@ -46,7 +50,7 @@ All demo accounts use the password **`demo1234`** and belong to **CashPilot Demo
 
 Run `npm run db:seed` again to reset the demo company and its records. Do not use these accounts or passwords in production.
 
-The demo includes a 3,000 DT invoice with a 1,000 DT partial payment, an overdue invoice, paid/approved/pending/refused expenses, and a saved 20-day customer-delay scenario. Dates are generated relative to the seeding day so the presentation remains reproducible.
+The demo includes a 3,000 DT invoice with a 1,000 DT partial payment, an overdue 400 DT invoice with 150 DT already paid for the payment reminder, paid/approved/pending/refused expenses, and a saved 20-day customer-delay scenario. Dates are generated relative to the seeding day so the presentation remains reproducible.
 
 ## Presentation walkthrough
 
@@ -59,6 +63,7 @@ The demo includes a 3,000 DT invoice with a 1,000 DT partial payment, an overdue
 7. Open **Cash forecasts** for the 30/60/90-day projections and their dated assumptions.
 8. Open **What-if simulation**, delay an unpaid customer invoice, and optionally add virtual income or an expense. Compare the initial and simulated lines and balances. No real transaction changes.
 9. Return to **Overview** for overdue invoices, expenses awaiting approval and negative-forecast alerts.
+10. Open invoice `INV-...-0003` and choose **Copy payment reminder**. The message requests **250.00 DT**, which is the 400 DT total minus the 150 DT payment already recorded.
 
 ## Main commands
 

@@ -8,6 +8,7 @@ import { invoiceRemaining } from "@/lib/payments";
 import { Card, EmptyState, PageHeader, StatusBadge } from "@/components/ui";
 import { SubmitButton } from "@/components/SubmitButton";
 import { PaymentForm } from "@/components/PaymentForm";
+import { CopyPaymentReminderButton } from "@/components/CopyPaymentReminderButton";
 import { formatDate, formatMoney } from "@/lib/format";
 import { invoiceStatusLabels, invoiceStatusTone } from "@/lib/invoices";
 
@@ -18,6 +19,9 @@ export default async function InvoiceDetailPage({ params, searchParams }: { para
   const invoice = await db.invoice.findFirst({ where: { id, companyId: company.id }, include: { contact: true, payments: { include: { recordedBy: true }, orderBy: { paidAt: "desc" } } } });
   if (!invoice) notFound();
   const remaining = invoiceRemaining(invoice);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const showPaymentReminder = invoice.status === InvoiceStatus.VALIDATED && invoice.dueDate < today && remaining.gt(0);
   return (
     <>
       <Link className="back-link" href="/invoices">← Back to invoices</Link>
@@ -34,7 +38,10 @@ export default async function InvoiceDetailPage({ params, searchParams }: { para
             </dl>
             <div className="invoice-notes"><h3>Notes</h3><p>{invoice.notes || "No notes."}</p><p>Issued: {invoice.issueDate ? formatDate(invoice.issueDate) : "Not issued"}</p></div>
             {invoice.cancellationReason && <div className="form-message error"><strong>Cancellation reason</strong><br />{invoice.cancellationReason}<br /><small>{invoice.cancelledAt && formatDate(invoice.cancelledAt)}</small></div>}
-            <Link className="button button-secondary" href={`/invoices/${invoice.id}/pdf`}>Export PDF</Link>
+            <div className="button-row">
+              <Link className="button button-secondary" href={`/invoices/${invoice.id}/pdf`}>Export PDF</Link>
+              {showPaymentReminder && <CopyPaymentReminderButton customerName={invoice.contact.name} invoiceNumber={invoice.number!} dueDate={formatDate(invoice.dueDate)} amountRemaining={remaining.toFixed(2)} />}
+            </div>
           </Card>
           <Card title={`Payment history · ${invoice.payments.length}`}>
             {invoice.payments.length === 0 ? <EmptyState title="No payments" detail="Full and partial payments will appear here." /> : <div className="table-wrap"><table><thead><tr><th>Date</th><th>Method</th><th>Amount</th><th>Recorded by</th></tr></thead><tbody>{invoice.payments.map((payment) => <tr key={payment.id}><td>{formatDate(payment.paidAt)}</td><td>{payment.method}{payment.reference && <small className="table-subtitle">{payment.reference}</small>}</td><td>{formatMoney(payment.amount)}</td><td>{payment.recordedBy.name}</td></tr>)}</tbody></table></div>}

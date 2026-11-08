@@ -80,6 +80,21 @@ async function main() {
   await db.invoice.create({
     data: { id: "cashpilot-demo-overdue", companyId, contactId: "cashpilot-demo-client", number: `INV-${year}-0002`, status: InvoiceStatus.VALIDATED, total: "500.00", issueDate: day(-35), dueDate: day(-5), validatedAt: day(-35), notes: "Overdue invoice for the dashboard alert." },
   });
+  await db.invoice.create({
+    data: {
+      id: "cashpilot-demo-reminder",
+      companyId,
+      contactId: "cashpilot-demo-client",
+      number: `INV-${year}-0003`,
+      status: InvoiceStatus.VALIDATED,
+      total: "400.00",
+      issueDate: day(-40),
+      dueDate: day(-10),
+      validatedAt: day(-40),
+      notes: "Commerce reminder example: 150 DT received, 250 DT remaining.",
+      payments: { create: { id: "cashpilot-demo-reminder-payment", companyId, recordedById: managerId, amount: "150.00", paidAt: day(-12), method: "Bank transfer", reference: "DEMO-REMINDER-150" } },
+    },
+  });
 
   const receipt = { receiptName: "demo-receipt.pdf", receiptStoredName: "demo-receipt.pdf", receiptType: "application/pdf" };
   await db.expense.create({ data: { id: "cashpilot-demo-paid", companyId, submittedById: collaboratorId, reviewedById: ownerId, paidById: managerId, category: "Office supplies", description: "Printer and paper", amount: "250.00", expenseDate: day(0), status: ExpenseStatus.PAID, reviewedAt: day(0), reviewNote: "Approved for the office.", paidAt: day(0), ...receipt } });
