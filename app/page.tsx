@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function HomePage() {
   return (
     <main className="welcome-page">
@@ -8,6 +10,10 @@ export default function HomePage() {
         <p className="lead">
           Bring invoices, customer payments, expenses and forecasts together in one simple workspace.
         </p>
+        <div className="welcome-actions">
+          <Link className="button button-primary" href="/register">Create your company</Link>
+          <Link className="button button-secondary" href="/login">Sign in</Link>
+        </div>
         <div className="feature-row" aria-label="Main features">
           <span>Real cash balance</span>
           <span>30, 60 & 90-day forecasts</span>
