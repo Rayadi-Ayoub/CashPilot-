@@ -44,6 +44,7 @@ model User {
   reviewedExpenses Expense[]       @relation("ExpenseReview")
   paidExpenses     Expense[]       @relation("ExpensePayment")
   cashAdjustments  CashAdjustment[]
+  simulations      Simulation[]
 }
 
 model Company {
@@ -58,6 +59,7 @@ model Company {
   payments           Payment[]
   expenses           Expense[]
   cashAdjustments    CashAdjustment[]
+  simulations        Simulation[]
 }
 
 model Membership {
@@ -186,4 +188,24 @@ model CashAdjustment {
   createdBy      User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
 
   @@index([companyId, adjustmentDate])
+}
+
+model Simulation {
+  id                   String    @id @default(cuid())
+  companyId            String
+  createdById          String
+  name                 String
+  delayInvoiceId       String?
+  delayDays            Int       @default(0)
+  newExpenseAmount     Decimal?
+  newExpenseDate       DateTime?
+  newExpenseLabel      String    @default("Simulated expense")
+  expectedIncomeAmount Decimal?
+  expectedIncomeDate   DateTime?
+  expectedIncomeLabel  String    @default("Simulated income")
+  createdAt            DateTime  @default(now())
+  company              Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdBy            User      @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([companyId, createdAt])
 }
