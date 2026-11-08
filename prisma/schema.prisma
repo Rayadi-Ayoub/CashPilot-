@@ -24,6 +24,13 @@ enum InvoiceStatus {
   CANCELLED
 }
 
+enum ExpenseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+}
+
 model User {
   id           String       @id @default(cuid())
   email        String       @unique
@@ -33,6 +40,7 @@ model User {
   memberships  Membership[]
   sessions     Session[]
   payments     Payment[]
+  expenses     Expense[]
 }
 
 model Company {
@@ -43,6 +51,7 @@ model Company {
   contacts    Contact[]
   invoices    Invoice[]
   payments    Payment[]
+  expenses    Expense[]
 }
 
 model Membership {
@@ -81,6 +90,7 @@ model Contact {
   updatedAt DateTime    @updatedAt
   company   Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
   invoices  Invoice[]
+  expenses  Expense[]
 
   @@unique([companyId, type, name])
   @@index([companyId])
@@ -126,4 +136,27 @@ model Payment {
 
   @@index([companyId, paidAt])
   @@index([invoiceId])
+}
+
+model Expense {
+  id                String        @id @default(cuid())
+  companyId         String
+  submittedById     String
+  supplierId        String?
+  category          String
+  description       String
+  amount            Decimal
+  expenseDate       DateTime
+  status            ExpenseStatus @default(PENDING)
+  receiptName       String
+  receiptStoredName String
+  receiptType       String
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  company           Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  submittedBy       User          @relation(fields: [submittedById], references: [id], onDelete: Restrict)
+  supplier          Contact?      @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, status])
+  @@index([submittedById])
 }
