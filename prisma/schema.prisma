@@ -32,6 +32,7 @@ model User {
   createdAt    DateTime     @default(now())
   memberships  Membership[]
   sessions     Session[]
+  payments     Payment[]
 }
 
 model Company {
@@ -41,6 +42,7 @@ model Company {
   memberships Membership[]
   contacts    Contact[]
   invoices    Invoice[]
+  payments    Payment[]
 }
 
 model Membership {
@@ -101,8 +103,27 @@ model Invoice {
   updatedAt          DateTime      @updatedAt
   company            Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
   contact            Contact       @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  payments           Payment[]
 
   @@unique([companyId, number])
   @@index([companyId, status])
   @@index([contactId])
+}
+
+model Payment {
+  id           String   @id @default(cuid())
+  companyId    String
+  invoiceId    String
+  recordedById String
+  amount       Decimal
+  paidAt       DateTime
+  method       String
+  reference    String   @default("")
+  createdAt    DateTime @default(now())
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  invoice      Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  recordedBy   User     @relation(fields: [recordedById], references: [id], onDelete: Restrict)
+
+  @@index([companyId, paidAt])
+  @@index([invoiceId])
 }

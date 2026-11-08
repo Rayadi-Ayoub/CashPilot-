@@ -11,7 +11,7 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
   const { company, role } = await getCompanyContext();
   requireManager(role);
   const { id } = await params;
-  const contact = await db.contact.findFirst({ where: { id, companyId: company.id }, include: { invoices: { orderBy: { createdAt: "desc" } } } });
+  const contact = await db.contact.findFirst({ where: { id, companyId: company.id }, include: { invoices: { include: { payments: true }, orderBy: { createdAt: "desc" } } } });
   if (!contact) notFound();
   return (
     <>
@@ -25,10 +25,10 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
             <div><dt>Address</dt><dd>{contact.address || "Not provided"}</dd></div>
           </dl>
         </Card>
-        <Card title={`Invoice history · ${contact.invoices.length}`}>
-          {contact.invoices.length === 0 ? <EmptyState title="No invoices" detail="Invoices for this contact will appear here." /> : (
-            <div className="table-wrap"><table><thead><tr><th>Invoice</th><th>Due</th><th>Total</th><th>Status</th></tr></thead><tbody>
-              {contact.invoices.map((invoice) => <tr key={invoice.id}><td><Link className="table-link" href={`/invoices/${invoice.id}`}>{invoice.number ?? "Draft"}</Link></td><td>{formatDate(invoice.dueDate)}</td><td>{formatMoney(invoice.total)}</td><td><StatusBadge tone={invoiceStatusTone(invoice.status)}>{invoiceStatusLabels[invoice.status]}</StatusBadge></td></tr>)}
+        <Card title={`Invoice & payment history · ${contact.invoices.length}`}>
+          {contact.invoices.length === 0 ? <EmptyState title="No invoices" detail="Invoices and payments for this contact will appear here." /> : (
+            <div className="table-wrap"><table><thead><tr><th>Invoice</th><th>Due</th><th>Total</th><th>Status</th><th>Payments</th></tr></thead><tbody>
+              {contact.invoices.map((invoice) => <tr key={invoice.id}><td><Link className="table-link" href={`/invoices/${invoice.id}`}>{invoice.number ?? "Draft"}</Link></td><td>{formatDate(invoice.dueDate)}</td><td>{formatMoney(invoice.total)}</td><td><StatusBadge tone={invoiceStatusTone(invoice.status)}>{invoiceStatusLabels[invoice.status]}</StatusBadge></td><td>{invoice.payments.length === 0 ? "—" : invoice.payments.map((payment) => <span className="payment-line" key={payment.id}>{formatDate(payment.paidAt)} · {formatMoney(payment.amount)}</span>)}</td></tr>)}
             </tbody></table></div>
           )}
         </Card>

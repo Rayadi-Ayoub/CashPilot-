@@ -61,8 +61,9 @@ export async function cancelInvoice(formData: FormData) {
   requireManager(role);
   const invoiceId = String(formData.get("invoiceId") ?? "");
   const reason = String(formData.get("reason") ?? "").trim();
-  const invoice = await db.invoice.findFirst({ where: { id: invoiceId, companyId: company.id } });
+  const invoice = await db.invoice.findFirst({ where: { id: invoiceId, companyId: company.id }, include: { payments: true } });
   if (!invoice || invoice.status === InvoiceStatus.CANCELLED) errorRedirect("This invoice is already cancelled or unavailable.", invoiceId);
+  if (invoice.payments.length > 0) errorRedirect("An invoice with recorded payments cannot be cancelled. Its payment history must be preserved.", invoiceId);
   if (!reason) errorRedirect("A cancellation reason is required to preserve the audit history.", invoiceId);
 
   await db.invoice.update({
