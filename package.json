@@ -7,16 +7,18 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "postinstall": "prisma generate",
     "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
     "bcryptjs": "^3.0.2",
-    "next": "^15.5.9",
+    "next": "^16.4.5",
     "pdfkit": "^0.17.2",
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
@@ -24,6 +26,7 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "prisma": "^6.16.2",
+    "tsx": "^4.20.6",
     "typescript": "^5.7.0"
   }
 }
