@@ -18,6 +18,12 @@ enum ContactType {
   SUPPLIER
 }
 
+enum InvoiceStatus {
+  DRAFT
+  VALIDATED
+  CANCELLED
+}
+
 model User {
   id           String       @id @default(cuid())
   email        String       @unique
@@ -34,6 +40,7 @@ model Company {
   createdAt   DateTime     @default(now())
   memberships Membership[]
   contacts    Contact[]
+  invoices    Invoice[]
 }
 
 model Membership {
@@ -71,7 +78,31 @@ model Contact {
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   company   Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  invoices  Invoice[]
 
   @@unique([companyId, type, name])
   @@index([companyId])
+}
+
+model Invoice {
+  id                 String        @id @default(cuid())
+  companyId          String
+  contactId          String
+  number             String?
+  status             InvoiceStatus @default(DRAFT)
+  total              Decimal
+  issueDate          DateTime?
+  dueDate            DateTime
+  notes              String        @default("")
+  validatedAt        DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  company            Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contact            Contact       @relation(fields: [contactId], references: [id], onDelete: Restrict)
+
+  @@unique([companyId, number])
+  @@index([companyId, status])
+  @@index([contactId])
 }

@@ -20,6 +20,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         <nav className="main-nav" aria-label="Main navigation">
           <NavLink href="/dashboard">Overview</NavLink>
           {canManage(role) && <NavLink href="/contacts">Clients & suppliers</NavLink>}
+          {canManage(role) && <NavLink href="/invoices">Invoices</NavLink>}
           <NavLink href="/company">Company & access</NavLink>
         </nav>
         <div className="sidebar-user">
