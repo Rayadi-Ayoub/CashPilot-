@@ -1,4 +1,4 @@
-import { getCompanyContext, roleLabels } from "@/lib/auth";
+import { canManage, getCompanyContext, roleLabels } from "@/lib/auth";
 import { logout, switchCompany } from "@/lib/actions/auth";
 import { NavLink } from "./NavLink";
 
@@ -19,6 +19,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <nav className="main-nav" aria-label="Main navigation">
           <NavLink href="/dashboard">Overview</NavLink>
+          {canManage(role) && <NavLink href="/contacts">Clients & suppliers</NavLink>}
           <NavLink href="/company">Company & access</NavLink>
         </nav>
         <div className="sidebar-user">

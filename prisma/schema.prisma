@@ -13,6 +13,11 @@ enum Role {
   COLLABORATOR
 }
 
+enum ContactType {
+  CLIENT
+  SUPPLIER
+}
+
 model User {
   id           String       @id @default(cuid())
   email        String       @unique
@@ -28,6 +33,7 @@ model Company {
   name        String
   createdAt   DateTime     @default(now())
   memberships Membership[]
+  contacts    Contact[]
 }
 
 model Membership {
@@ -52,4 +58,20 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model Contact {
+  id        String      @id @default(cuid())
+  companyId String
+  type      ContactType
+  name      String
+  email     String      @default("")
+  phone     String      @default("")
+  address   String      @default("")
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  company   Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, type, name])
+  @@index([companyId])
 }
