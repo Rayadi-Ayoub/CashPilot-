@@ -13,3 +13,13 @@ export function expenseStatusTone(status: ExpenseStatus): "warning" | "success" 
   if (status === ExpenseStatus.PAID) return "info";
   return "success";
 }
+
+/** Workflow: only a pending expense can be approved or refused. */
+export function canReviewExpense(status: ExpenseStatus) {
+  return status === ExpenseStatus.PENDING;
+}
+
+/** RM5: only an approved expense can be paid; a refused (or already paid) expense cannot. */
+export function canPayExpense(status: ExpenseStatus) {
+  return status === ExpenseStatus.APPROVED;
+}
