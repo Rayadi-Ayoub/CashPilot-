@@ -14,3 +14,6 @@ data/uploads/
 AGENTS.md
 context/
 README-Spec-driven-developement.md
+
+# Test reports
+coverage/
