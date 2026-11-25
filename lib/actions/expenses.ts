@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCompanyContext } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { AuditAction, logAudit } from "@/lib/audit";
 import { parseMoney } from "@/lib/money";
 
 const receiptTypes: Record<string, string> = {
@@ -48,7 +49,7 @@ export async function createExpense(formData: FormData) {
   const filePath = path.join(directory, storedName);
   await writeFile(filePath, Buffer.from(await receipt.arrayBuffer()));
   try {
-    await db.expense.create({
+    const expense = await db.expense.create({
       data: {
         companyId: company.id,
         submittedById: user.id,
@@ -63,6 +64,7 @@ export async function createExpense(formData: FormData) {
         receiptType: receipt.type,
       },
     });
+    await logAudit({ companyId: company.id, userId: user.id, action: AuditAction.EXPENSE_SUBMITTED, entity: "Expense", entityId: expense.id, details: `${description} · ${amount.toFixed(2)} DT` });
   } catch (error) {
     await unlink(filePath).catch(() => undefined);
     throw error;

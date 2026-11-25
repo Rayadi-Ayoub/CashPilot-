@@ -103,11 +103,76 @@ async function main() {
   await db.expense.create({ data: { id: "cashpilot-demo-rejected", companyId, submittedById: collaboratorId, reviewedById: ownerId, category: "Other", description: "Unbudgeted purchase", amount: "90.00", expenseDate: day(-2), status: ExpenseStatus.REJECTED, reviewedAt: day(-1), reviewNote: "Outside the current budget.", ...receipt } });
   await db.simulation.create({ data: { id: "cashpilot-demo-simulation", companyId, createdById: managerId, name: "Main customer pays 20 days late", delayInvoiceId: "cashpilot-demo-invoice", delayDays: 20 } });
   await createReceipt(companyId);
+  await seedVolume(year, receipt);
+  await seedAuditLog(year);
 
   console.log("Demo data ready. Accounts (password: demo1234):");
   console.log("  owner@cashpilot.demo");
   console.log("  manager@cashpilot.demo");
   console.log("  collaborator@cashpilot.demo");
+}
+
+// Données de volume pour démontrer la recherche et le filtrage sur une entité à fort volume.
+// Uniquement des brouillons, des factures annulées et des dépenses refusées :
+// elles n'ont aucun effet sur la trésorerie, les prévisions ni les alertes de la démo.
+const volumeClients = ["Bizerte Distribution", "Sfax Wholesale", "Sousse Market", "Nabeul Ceramics", "Kairouan Textiles", "Monastir Foods", "Gabes Electro", "Djerba Hotels", "Tozeur Dates Co", "Gafsa Building", "Mahdia Fishing", "Beja Agro"];
+const volumeCategories = ["Office supplies", "Travel", "Rent", "Utilities", "Services", "Other"];
+
+async function seedVolume(year: number, receipt: { receiptName: string; receiptStoredName: string; receiptType: string }) {
+  await db.contact.createMany({
+    data: volumeClients.map((name, index) => ({ id: `cashpilot-demo-client-${index + 1}`, companyId, type: "CLIENT" as const, name, email: `billing@client${index + 1}.example`, address: name.split(" ")[0] })),
+  });
+  const invoices = Array.from({ length: 200 }, (_, index) => {
+    const cancelled = index % 4 === 0;
+    const contactId = `cashpilot-demo-client-${(index % volumeClients.length) + 1}`;
+    const total = (150 + ((index * 137) % 4850)).toFixed(2);
+    const offset = (index % 120) - 60;
+    return {
+      id: `cashpilot-demo-volume-${index + 1}`,
+      companyId,
+      contactId,
+      total,
+      dueDate: day(offset),
+      notes: cancelled ? "Volume demo: cancelled order." : "Volume demo: draft quote awaiting confirmation.",
+      ...(cancelled
+        ? { status: InvoiceStatus.CANCELLED, number: `INV-${year}-${String(4 + index / 4).padStart(4, "0")}`, issueDate: day(offset - 30), validatedAt: day(offset - 30), cancelledAt: day(offset - 20), cancellationReason: "Order cancelled by the customer." }
+        : { status: InvoiceStatus.DRAFT }),
+    };
+  });
+  await db.invoice.createMany({ data: invoices });
+  const expenses = Array.from({ length: 80 }, (_, index) => ({
+    id: `cashpilot-demo-volume-expense-${index + 1}`,
+    companyId,
+    submittedById: index % 2 === 0 ? collaboratorId : managerId,
+    reviewedById: ownerId,
+    category: volumeCategories[index % volumeCategories.length],
+    description: `Archived request #${index + 1}`,
+    amount: (20 + ((index * 53) % 900)).toFixed(2),
+    expenseDate: day(-((index % 90) + 1)),
+    status: ExpenseStatus.REJECTED,
+    reviewedAt: day(-((index % 90) + 1)),
+    reviewNote: "Volume demo: outside the current budget.",
+    ...receipt,
+  }));
+  await db.expense.createMany({ data: expenses });
+}
+
+// Quelques lignes d'audit pour que le journal ne soit pas vide en démonstration.
+async function seedAuditLog(year: number) {
+  const entries = [
+    { userId: ownerId, action: "REGISTER", entity: "Company", entityId: companyId, details: "CashPilot Demo SARL · opening balance 5000.00 DT", at: -40 },
+    { userId: managerId, action: "INVOICE_VALIDATED", entity: "Invoice", entityId: "cashpilot-demo-reminder", details: `INV-${year}-0003`, at: -40 },
+    { userId: managerId, action: "PAYMENT_RECORDED", entity: "Payment", entityId: "cashpilot-demo-reminder-payment", details: `150.00 DT on INV-${year}-0003 (Bank transfer)`, at: -12 },
+    { userId: managerId, action: "INVOICE_VALIDATED", entity: "Invoice", entityId: "cashpilot-demo-invoice", details: `INV-${year}-0001`, at: 0 },
+    { userId: managerId, action: "PAYMENT_RECORDED", entity: "Payment", entityId: "cashpilot-demo-payment", details: `1000.00 DT on INV-${year}-0001 (Bank transfer)`, at: 0 },
+    { userId: collaboratorId, action: "EXPENSE_SUBMITTED", entity: "Expense", entityId: "cashpilot-demo-paid", details: "Printer and paper · 250.00 DT", at: 0 },
+    { userId: ownerId, action: "EXPENSE_APPROVED", entity: "Expense", entityId: "cashpilot-demo-paid", details: "Approved for the office.", at: 0 },
+    { userId: managerId, action: "EXPENSE_PAID", entity: "Expense", entityId: "cashpilot-demo-paid", details: "Paid", at: 0 },
+    { userId: ownerId, action: "EXPENSE_REJECTED", entity: "Expense", entityId: "cashpilot-demo-rejected", details: "Outside the current budget.", at: -1 },
+  ];
+  await db.auditLog.createMany({
+    data: entries.map(({ at, ...entry }) => ({ ...entry, companyId, createdAt: day(at) })),
+  });
 }
 
 main().catch((error) => {
