@@ -30,7 +30,11 @@ résultat renvoie à sa preuve dans `docs/preuves/`.
 2. **Outil et commande** : Playwright 1.65 sur 3 moteurs,
    `npx playwright test --project=chromium --project=firefox --project=webkit`.
 3. **Résultat obtenu** : **24/24 tests passés** (8 tests × 3 moteurs :
-   Chromium 159, Firefox 159, WebKit 27.2), 0 échec, 0 instable, durée 1,4 min.
+   Chromium 159, Firefox 159, WebKit 27.2), plus les 3 connexions de préparation
+   (une par rôle), soit 27/27 ; 0 échec, 0 instable, durée 1,3 min.
+   Chaque rôle se connecte une seule fois par le vrai formulaire et la session est
+   réutilisée : au plus 4 tentatives de connexion par compte pour tout le run,
+   compatible avec une limitation des tentatives de connexion (section 6.6).
 4. **Preuves** : `6.3-3-navigateurs.png`, `6.3-playwright-3-navigateurs.log`
    (en complément du test manuel Chrome / Firefox / Edge de Fares).
 5. **Conclusion** : **conforme** (3 moteurs ≥ 2 exigés).
@@ -81,7 +85,7 @@ résultat reste visible dans chaque run.
 | RM5 | Dépense refusée jamais payable | 6.1 | `transitions.test.ts` (4 tests RM5) ; E2E scénario 4 | Vitest, Playwright | Passés ×3 navigateurs | `6.7-vitest.png`, `6.3-3-navigateurs.png` | Hassan | ✅ |
 | RM6 | Montant > 0, 2 décimales maximum | 6.1 | `money.test.ts` (9 tests RM6) | Vitest | Passés (négatif, zéro, 3 décimales, texte, vide refusés) | `6.7-vitest.png` | Hassan | ✅ |
 | 6.1 | Fonctionnalités exactes (part unitaires + E2E) | 6.1 | `tests/unit/`, `tests/e2e/` | Vitest, Playwright | 61/61 unitaires ; 8/8 E2E Chromium | `6.7-vitest.png`, `6.1-playwright-rapport.png` | Hassan | ✅ |
-| 6.3 | ≥ 2 navigateurs | 6.3 | `tests/e2e/*` | Playwright (Chromium, Firefox, WebKit) | 24/24 passés | `6.3-3-navigateurs.png` | Hassan | ✅ |
+| 6.3 | ≥ 2 navigateurs | 6.3 | `tests/e2e/*` | Playwright (Chromium, Firefox, WebKit) | 24/24 passés (+ 3 connexions de préparation) | `6.3-3-navigateurs.png` | Hassan | ✅ |
 | 6.7 | Couverture mesurée > 70 % | 6.7 | `npm run test:coverage` | Vitest v8 | Lignes 72,18 % sur `lib/` (hors Server Actions) ; `tsc` 0 erreur | `6.7-couverture.png` | Hassan | ✅ |
 | 6.7 | Intégration continue | 6.7 | `.github/workflows/ci.yml` | GitHub Actions | Étapes vertes en local ; run GitHub à capturer après le push | `6.7-ci-github.png` | Hassan | ⏳ |
 

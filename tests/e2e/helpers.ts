@@ -1,6 +1,12 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import path from "node:path";
+import { expect, test, type Browser, type Locator, type Page } from "@playwright/test";
 
 export type DemoRole = "owner" | "manager" | "collaborator";
+
+/** Session file saved by `auth.setup.ts` for a demo role. */
+export function authFile(role: DemoRole) {
+  return path.join(__dirname, "..", "..", "playwright", ".auth", `${role}.json`);
+}
 
 /** Signs in through the real login form with a seeded demo account. */
 export async function login(page: Page, role: DemoRole) {
@@ -11,9 +17,17 @@ export async function login(page: Page, role: DemoRole) {
   await expect(page).toHaveURL(/\/dashboard$/);
 }
 
-export async function logout(page: Page) {
-  await page.getByRole("button", { name: "Sign out" }).click();
-  await expect(page).toHaveURL(/\/login$/);
+/**
+ * Opens a page already signed in as `role`, in its own browser context.
+ * Used when one scenario needs two users; never sign out of a saved session,
+ * because signing out deletes it on the server for every later test.
+ */
+export async function pageAs(browser: Browser, role: DemoRole) {
+  const context = await browser.newContext({
+    ...test.info().project.use,
+    storageState: authFile(role),
+  });
+  return context.newPage();
 }
 
 export function mainNav(page: Page): Locator {

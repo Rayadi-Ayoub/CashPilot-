@@ -18,9 +18,11 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
-    { name: "webkit", use: { ...devices["Desktop Safari"] } },
+    // Signs each demo role in once and saves the session (tests/e2e/auth.setup.ts).
+    { name: "setup", testMatch: /auth\.setup\.ts/, use: { ...devices["Desktop Chrome"] } },
+    { name: "chromium", use: { ...devices["Desktop Chrome"] }, dependencies: ["setup"] },
+    { name: "firefox", use: { ...devices["Desktop Firefox"] }, dependencies: ["setup"] },
+    { name: "webkit", use: { ...devices["Desktop Safari"] }, dependencies: ["setup"] },
   ],
   webServer: {
     command: "npm run dev",

@@ -1,8 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { login, mainNav } from "./helpers";
+import { authFile, mainNav } from "./helpers";
+
+test.use({ storageState: authFile("collaborator") });
 
 test("Scenario 5 – a collaborator has no access to the Invoices page", async ({ page }) => {
-  await login(page, "collaborator");
+  await page.goto("/dashboard");
 
   // The navigation only offers the collaborator's pages.
   await expect(mainNav(page).getByRole("link", { name: "Expenses" })).toBeVisible();

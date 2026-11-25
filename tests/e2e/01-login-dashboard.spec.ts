@@ -11,9 +11,11 @@ test("Scenario 1 – the owner signs in and sees the dashboard", async ({ page }
   await expect(mainNav(page).getByRole("link", { name: "Invoices" })).toBeVisible();
 });
 
+// Uses the collaborator account so the owner (signed in by scenario 1 and the
+// setup step) stays well below any per-account login limit.
 test("Scenario 1b – a wrong password is rejected", async ({ page }) => {
   await page.goto("/login");
-  await page.getByLabel("Email").fill("owner@cashpilot.demo");
+  await page.getByLabel("Email").fill("collaborator@cashpilot.demo");
   await page.getByLabel("Password").fill("wrong-password");
   await page.getByRole("button", { name: "Sign in" }).click();
 

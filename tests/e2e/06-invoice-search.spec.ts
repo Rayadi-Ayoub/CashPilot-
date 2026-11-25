@@ -1,8 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { login } from "./helpers";
+import { authFile } from "./helpers";
+
+test.use({ storageState: authFile("manager") });
 
 test("Scenario 6 – a manager finds invoices by client name among the high-volume invoices", async ({ page }) => {
-  await login(page, "manager");
   await page.goto("/invoices");
   await expect(page.locator(".result-count")).toHaveText(/^\d+ invoices$/);
 
@@ -23,7 +24,6 @@ test("Scenario 6 – a manager finds invoices by client name among the high-volu
 });
 
 test("Scenario 6b – a search without match shows an empty state", async ({ page }) => {
-  await login(page, "manager");
   await page.goto("/invoices?q=no-such-client-xyz");
 
   await expect(page.getByText("No matching invoices")).toBeVisible();

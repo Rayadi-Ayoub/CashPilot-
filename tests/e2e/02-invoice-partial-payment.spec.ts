@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { createValidatedInvoice, detailValue, login, recordPayment, successMessage } from "./helpers";
+import { authFile, createValidatedInvoice, detailValue, recordPayment, successMessage } from "./helpers";
+
+test.use({ storageState: authFile("manager") });
 
 test("Scenario 2 – create, validate and partially pay an invoice: the remaining amount decreases", async ({ page }) => {
-  await login(page, "manager");
-
   await createValidatedInvoice(page, "1000");
   await expect(page.getByRole("heading", { level: 1, name: /^INV-\d{4}-\d{4}$/ })).toBeVisible();
   await expect(page.locator(".page-header .badge")).toHaveText("Validated");

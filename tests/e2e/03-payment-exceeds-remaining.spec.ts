@@ -1,8 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { createValidatedInvoice, detailValue, errorMessage, login, recordPayment } from "./helpers";
+import { authFile, createValidatedInvoice, detailValue, errorMessage, recordPayment } from "./helpers";
+
+test.use({ storageState: authFile("manager") });
 
 test("Scenario 3 – RM1: a payment above the remaining amount is rejected", async ({ page }) => {
-  await login(page, "manager");
   await createValidatedInvoice(page, "300");
   await expect(detailValue(page, "Remaining")).toContainText("300.00");
 
