@@ -1,0 +1,102 @@
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": SQLite database "dev.db" at "file:./dev.db"
+
+9 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+
+> cashpilot@1.0.0 db:seed
+> tsx prisma/seed.ts
+
+Demo data ready. Accounts (password: demo1234):
+  owner@cashpilot.demo
+  manager@cashpilot.demo
+  collaborator@cashpilot.demo
+
+Running 24 tests using 1 worker
+
+  ok  1 [chromium] › tests\e2e\01-login-dashboard.spec.ts:4:1 › Scenario 1 – the owner signs in and sees the dashboard (2.5s)
+  ok  2 [chromium] › tests\e2e\01-login-dashboard.spec.ts:14:1 › Scenario 1b – a wrong password is rejected (1.3s)
+  ok  3 [chromium] › tests\e2e\02-invoice-partial-payment.spec.ts:4:1 › Scenario 2 – create, validate and partially pay an invoice: the remaining amount decreases (4.1s)
+  ok  4 [chromium] › tests\e2e\03-payment-exceeds-remaining.spec.ts:4:1 › Scenario 3 – RM1: a payment above the remaining amount is rejected (2.7s)
+  ok  5 [chromium] › tests\e2e\04-expense-approval-flow.spec.ts:4:1 › Scenario 4 – a collaborator submits an expense, the owner approves it and it is marked paid (6.8s)
+[WebServer] ⨯ Error: Only the owner or financial manager can perform this action.
+[WebServer]     at requireManager (lib\auth.ts:44:31)
+[WebServer]     at InvoicesPage (app\(workspace)\invoices\page.tsx:17:17)
+[WebServer]   42 |
+[WebServer]   43 | export function requireManager(role: Role) {
+[WebServer] > 44 |   if (!canManage(role)) throw new Error("Only the owner or financial manager can perform this action.");
+[WebServer]      |                               ^
+[WebServer]   45 | }
+[WebServer]   46 |
+[WebServer]   47 | export function requireOwner(role: Role) { {
+[WebServer]   digest: '2476663647'
+[WebServer] }
+[WebServer] [browser] Uncaught Error: Only the owner or financial manager can perform this action.
+[WebServer]     at requireManager (lib\auth.ts:44:31)
+[WebServer]     at InvoicesPage (app\(workspace)\invoices\page.tsx:17:17)
+[WebServer]   42 |
+[WebServer]   43 | export function requireManager(role: Role) {
+[WebServer] > 44 |   if (!canManage(role)) throw new Error("Only the owner or financial manager can perform this action.");
+[WebServer]      |                               ^
+[WebServer]   45 | }
+[WebServer]   46 |
+[WebServer]   47 | export function requireOwner(role: Role) {
+  ok  6 [chromium] › tests\e2e\05-collaborator-no-invoices.spec.ts:4:1 › Scenario 5 – a collaborator has no access to the Invoices page (1.7s)
+  ok  7 [chromium] › tests\e2e\06-invoice-search.spec.ts:4:1 › Scenario 6 – a manager finds invoices by client name among the high-volume invoices (2.2s)
+  ok  8 [chromium] › tests\e2e\06-invoice-search.spec.ts:25:1 › Scenario 6b – a search without match shows an empty state (1.6s)
+  ok  9 [firefox] › tests\e2e\01-login-dashboard.spec.ts:4:1 › Scenario 1 – the owner signs in and sees the dashboard (3.6s)
+  ok 10 [firefox] › tests\e2e\01-login-dashboard.spec.ts:14:1 › Scenario 1b – a wrong password is rejected (2.1s)
+  ok 11 [firefox] › tests\e2e\02-invoice-partial-payment.spec.ts:4:1 › Scenario 2 – create, validate and partially pay an invoice: the remaining amount decreases (3.3s)
+  ok 12 [firefox] › tests\e2e\03-payment-exceeds-remaining.spec.ts:4:1 › Scenario 3 – RM1: a payment above the remaining amount is rejected (3.2s)
+  ok 13 [firefox] › tests\e2e\04-expense-approval-flow.spec.ts:4:1 › Scenario 4 – a collaborator submits an expense, the owner approves it and it is marked paid (6.6s)
+[WebServer] ⨯ Error: Only the owner or financial manager can perform this action.
+[WebServer]     at requireManager (lib\auth.ts:44:31)
+[WebServer]     at InvoicesPage (app\(workspace)\invoices\page.tsx:17:17)
+[WebServer]   42 |
+[WebServer]   43 | export function requireManager(role: Role) {
+[WebServer] > 44 |   if (!canManage(role)) throw new Error("Only the owner or financial manager can perform this action.");
+[WebServer]      |                               ^
+[WebServer]   45 | }
+[WebServer]   46 |
+[WebServer]   47 | export function requireOwner(role: Role) { {
+[WebServer]   digest: '2476663647'
+[WebServer] }
+[WebServer] [browser] Uncaught Error: Only the owner or financial manager can perform this action.
+[WebServer]     at requireManager (lib\auth.ts:44:31)
+[WebServer]     at InvoicesPage (app\(workspace)\invoices\page.tsx:17:17)
+[WebServer]   42 |
+[WebServer]   43 | export function requireManager(role: Role) {
+[WebServer] > 44 |   if (!canManage(role)) throw new Error("Only the owner or financial manager can perform this action.");
+[WebServer]      |                               ^
+[WebServer]   45 | }
+[WebServer]   46 |
+[WebServer]   47 | export function requireOwner(role: Role) {
+  ok 14 [firefox] › tests\e2e\05-collaborator-no-invoices.spec.ts:4:1 › Scenario 5 – a collaborator has no access to the Invoices page (2.0s)
+  ok 15 [firefox] › tests\e2e\06-invoice-search.spec.ts:4:1 › Scenario 6 – a manager finds invoices by client name among the high-volume invoices (2.8s)
+  ok 16 [firefox] › tests\e2e\06-invoice-search.spec.ts:25:1 › Scenario 6b – a search without match shows an empty state (2.0s)
+  ok 17 [webkit] › tests\e2e\01-login-dashboard.spec.ts:4:1 › Scenario 1 – the owner signs in and sees the dashboard (2.1s)
+  ok 18 [webkit] › tests\e2e\01-login-dashboard.spec.ts:14:1 › Scenario 1b – a wrong password is rejected (1.8s)
+  ok 19 [webkit] › tests\e2e\02-invoice-partial-payment.spec.ts:4:1 › Scenario 2 – create, validate and partially pay an invoice: the remaining amount decreases (3.4s)
+  ok 20 [webkit] › tests\e2e\03-payment-exceeds-remaining.spec.ts:4:1 › Scenario 3 – RM1: a payment above the remaining amount is rejected (3.4s)
+  ok 21 [webkit] › tests\e2e\04-expense-approval-flow.spec.ts:4:1 › Scenario 4 – a collaborator submits an expense, the owner approves it and it is marked paid (6.6s)
+[WebServer] ⨯ Error: Only the owner or financial manager can perform this action.
+[WebServer]     at requireManager (lib\auth.ts:44:31)
+[WebServer]     at InvoicesPage (app\(workspace)\invoices\page.tsx:17:17)
+[WebServer]   42 |
+[WebServer]   43 | export function requireManager(role: Role) {
+[WebServer] > 44 |   if (!canManage(role)) throw new Error("Only the owner or financial manager can perform this action.");
+[WebServer]      |                               ^
+[WebServer]   45 | }
+[WebServer]   46 |
+[WebServer]   47 | export function requireOwner(role: Role) { {
+[WebServer]   digest: '2476663647'
+[WebServer] }
+[WebServer] [browser] Uncaught Error: Only the owner or financial manager can perform this action.
+  ok 22 [webkit] › tests\e2e\05-collaborator-no-invoices.spec.ts:4:1 › Scenario 5 – a collaborator has no access to the Invoices page (2.0s)
+  ok 23 [webkit] › tests\e2e\06-invoice-search.spec.ts:4:1 › Scenario 6 – a manager finds invoices by client name among the high-volume invoices (2.8s)
+  ok 24 [webkit] › tests\e2e\06-invoice-search.spec.ts:25:1 › Scenario 6b – a search without match shows an empty state (2.0s)
+
+  24 passed (1.4m)

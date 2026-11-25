@@ -1,0 +1,78 @@
+
+> cashpilot@1.0.0 test:coverage
+> vitest run --coverage
+
+
+ RUN  v5.1.2 C:/Users/thameur/OneDrive/Desktop/CashPilot-
+      Coverage enabled with v8
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": SQLite database "test.db" at "file:./test.db"
+
+SQLite database test.db created at file:./test.db
+
+9 migrations found in prisma/migrations
+
+Applying migration `20261108225431_company_access`
+Applying migration `20261108225658_contacts`
+Applying migration `20261108225931_invoices`
+Applying migration `20261108230259_customer_payments`
+Applying migration `20261108230453_expenses`
+Applying migration `20261108230635_expense_approval`
+Applying migration `20261108230858_cash_balance`
+Applying migration `20261108231214_cash_simulation`
+Applying migration `20261125180000_audit_log`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20261108225431_company_access/
+    └─ migration.sql
+  └─ 20261108225658_contacts/
+    └─ migration.sql
+  └─ 20261108225931_invoices/
+    └─ migration.sql
+  └─ 20261108230259_customer_payments/
+    └─ migration.sql
+  └─ 20261108230453_expenses/
+    └─ migration.sql
+  └─ 20261108230635_expense_approval/
+    └─ migration.sql
+  └─ 20261108230858_cash_balance/
+    └─ migration.sql
+  └─ 20261108231214_cash_simulation/
+    └─ migration.sql
+  └─ 20261125180000_audit_log/
+    └─ migration.sql
+      
+All migrations have been successfully applied.
+
+ Test Files  13 passed (13)
+      Tests  82 passed (82)
+   Start at  19:34:13
+   Duration  8.14s (tests 37%, import 34%, worker 15%, transform 13%)
+
+    Isolate  13 workers spawned · ~176ms startup each (spawn + environment, per file)
+             at least ~2.11s faster with isolate: false — reuses workers across files instead of one per file
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   70.74 |    73.94 |   71.87 |   72.18 |                   
+ auth.ts           |   20.68 |    33.33 |   42.85 |   18.18 | 7-36              
+ cash.ts           |   41.66 |        0 |   44.44 |      40 | 17-29             
+ db.ts             |     100 |       75 |     100 |     100 | 7                 
+ forecast.ts       |   68.57 |      100 |    62.5 |      75 | 39-62             
+ invoiceService.ts |   95.23 |    85.71 |     100 |      95 | 36                
+ paymentService.ts |   92.85 |    85.71 |     100 |     100 | 24,55             
+ simulation.ts     |       0 |        0 |       0 |       0 | 5-19              
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 70.74% ( 133/188 )
+Branches     : 73.94% ( 88/119 )
+Functions    : 71.87% ( 46/64 )
+Lines        : 72.18% ( 109/151 )
+================================================================================
