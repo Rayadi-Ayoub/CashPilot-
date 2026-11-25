@@ -9,3 +9,7 @@ prisma/dev.db
 prisma/dev.db-journal
 data/uploads/
 .DS_Store
+
+# Base de test et rapports
+prisma/test.db*
+coverage/
