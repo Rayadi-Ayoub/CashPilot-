@@ -9,3 +9,8 @@ prisma/dev.db
 prisma/dev.db-journal
 data/uploads/
 .DS_Store
+
+# Personal spec-driven workflow (not shared)
+AGENTS.md
+context/
+README-Spec-driven-developement.md
