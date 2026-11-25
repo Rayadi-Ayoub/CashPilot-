@@ -57,13 +57,13 @@ résultat renvoie à sa preuve dans `docs/preuves/`.
    - Testabilité : les règles de transition RM2 et RM5 ont été extraites en fonctions
      pures (`canCancelInvoice`, `canPayExpense`…) et testées unitairement.
    - CI : le workflow exécute `npm ci`, `prisma migrate deploy`, `typecheck`,
-     `test:coverage` et `npm audit`. Ces étapes ont été rejouées en local et passent toutes.
-     **Exécution GitHub Actions : non exécutée** tant que la branche n'est pas poussée
-     (procédure : pousser la branche, ouvrir l'onglet Actions).
+     `test:coverage` et `npm audit`. **Run GitHub Actions vert** sur la branche `hassen`
+     (run 45697430728, 40 s) : 82/82 tests, mêmes taux de couverture qu'en local
+     (lignes 72,18 %). L'étape `npm audit` signale les 4 vulnérabilités connues sans
+     bloquer le run (voir point SCA ci-dessous).
 4. **Preuves** : `6.7-couverture.png`, `6.7-vitest.png`, `6.7-vitest-coverage.log`,
-   `6.7-ci-github.png` (à capturer après le premier run).
-5. **Conclusion** : couverture et typage **conformes** ; CI **partiellement conforme**
-   tant que le run GitHub n'est pas capturé.
+   `6.7-ci-github.png` (capture de l'onglet Actions).
+5. **Conclusion** : couverture, typage et intégration continue **conformes**.
 
 **Point SCA à reporter en 6.6 (Nader / Fares)** : `npm audit --audit-level=high`
 signale 4 vulnérabilités élevées, toutes dans la chaîne Prisma 6 (`deepmerge-ts`,
@@ -87,7 +87,7 @@ résultat reste visible dans chaque run.
 | 6.1 | Fonctionnalités exactes (part unitaires + E2E) | 6.1 | `tests/unit/`, `tests/e2e/` | Vitest, Playwright | 61/61 unitaires ; 8/8 E2E Chromium | `6.7-vitest.png`, `6.1-playwright-rapport.png` | Hassan | ✅ |
 | 6.3 | ≥ 2 navigateurs | 6.3 | `tests/e2e/*` | Playwright (Chromium, Firefox, WebKit) | 24/24 passés (+ 3 connexions de préparation) | `6.3-3-navigateurs.png` | Hassan | ✅ |
 | 6.7 | Couverture mesurée > 70 % | 6.7 | `npm run test:coverage` | Vitest v8 | Lignes 72,18 % sur `lib/` (hors Server Actions) ; `tsc` 0 erreur | `6.7-couverture.png` | Hassan | ✅ |
-| 6.7 | Intégration continue | 6.7 | `.github/workflows/ci.yml` | GitHub Actions | Étapes vertes en local ; run GitHub à capturer après le push | `6.7-ci-github.png` | Hassan | ⏳ |
+| 6.7 | Intégration continue | 6.7 | `.github/workflows/ci.yml` | GitHub Actions | Run vert sur `hassen` : 82/82 tests, couverture 72,18 % ; audit signalé, non bloquant | `6.7-ci-github.png` | Hassan | ✅ |
 
 ## Démonstration à la soutenance
 
