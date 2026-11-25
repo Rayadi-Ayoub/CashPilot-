@@ -13,7 +13,8 @@
     "db:studio": "prisma studio",
     "test": "vitest run",
     "test:integration": "vitest run tests/integration",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
@@ -24,6 +25,7 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@types/node": "^22.10.0",
     "@types/pdfkit": "^0.17.3",
     "@types/react": "^19.1.0",
