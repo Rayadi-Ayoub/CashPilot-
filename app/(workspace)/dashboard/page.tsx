@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ExpenseStatus, InvoiceStatus } from "@prisma/client";
+import { ContactType, ExpenseStatus, InvoiceStatus } from "@prisma/client";
 import { canManage, getCompanyContext } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getForecastData } from "@/lib/forecast";
@@ -9,7 +9,10 @@ import { sumMoney } from "@/lib/money";
 import { Card, EmptyState, PageHeader, StatusBadge } from "@/components/ui";
 import { formatDate, formatMoney } from "@/lib/format";
 
-export default async function DashboardPage() {
+const PERIODS = [30, 60, 90] as const;
+type SearchParams = { period?: string; client?: string };
+
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const { company, role, user } = await getCompanyContext();
   if (!canManage(role)) {
     const requests = await db.expense.findMany({ where: { companyId: company.id, submittedById: user.id }, orderBy: { createdAt: "desc" }, take: 6 });
@@ -23,12 +26,21 @@ export default async function DashboardPage() {
     );
   }
 
+  // Filtres du tableau de bord : période (30/60/90 jours) et client.
+  const params = await searchParams;
+  const period = PERIODS.find((value) => String(value) === params.period) ?? 30;
   const forecast = await getForecastData(company.id);
-  const [invoices, pendingExpenses, recentPayments] = await Promise.all([
-    db.invoice.findMany({ where: { companyId: company.id, status: InvoiceStatus.VALIDATED }, include: { contact: true, payments: true }, orderBy: { dueDate: "asc" } }),
+  const clients = await db.contact.findMany({ where: { companyId: company.id, type: ContactType.CLIENT }, orderBy: { name: "asc" } });
+  const clientId = clients.some((client) => client.id === params.client) ? params.client : undefined;
+  const periodStart = new Date(forecast.referenceDate.getTime() - period * 24 * 60 * 60 * 1000);
+  const [invoices, pendingExpenses, recentPayments, periodPayments] = await Promise.all([
+    db.invoice.findMany({ where: { companyId: company.id, status: InvoiceStatus.VALIDATED, ...(clientId ? { contactId: clientId } : {}) }, include: { contact: true, payments: true }, orderBy: { dueDate: "asc" } }),
     db.expense.findMany({ where: { companyId: company.id, status: ExpenseStatus.PENDING }, include: { submittedBy: true }, orderBy: { createdAt: "asc" } }),
-    db.payment.findMany({ where: { companyId: company.id }, include: { invoice: { include: { contact: true } } }, orderBy: { paidAt: "desc" }, take: 5 }),
+    db.payment.findMany({ where: { companyId: company.id, ...(clientId ? { invoice: { contactId: clientId } } : {}) }, include: { invoice: { include: { contact: true } } }, orderBy: { paidAt: "desc" }, take: 5 }),
+    db.payment.findMany({ where: { companyId: company.id, paidAt: { gte: periodStart }, ...(clientId ? { invoice: { contactId: clientId } } : {}) }, select: { amount: true } }),
   ]);
+  const collectedInPeriod = sumMoney(periodPayments.map((payment) => payment.amount));
+  const selectedClient = clients.find((client) => client.id === clientId);
   const outstandingInvoices = invoices.filter((invoice) => invoiceRemaining(invoice).gt(0));
   const overdueInvoices = outstandingInvoices.filter((invoice) => invoice.dueDate < forecast.referenceDate);
   const outstandingAmount = sumMoney(outstandingInvoices.map((invoice) => invoiceRemaining(invoice)));
@@ -37,10 +49,16 @@ export default async function DashboardPage() {
   return (
     <>
       <PageHeader title={`${company.name} overview`} description={`Real cash and upcoming commitments on ${formatDate(forecast.referenceDate)}.`} action={<Link className="button button-primary" href="/invoices">Create an invoice</Link>} />
+      <form className="filter-bar" method="get" aria-label="Dashboard filters">
+        <label>Period<select name="period" defaultValue={String(period)}>{PERIODS.map((value) => <option key={value} value={value}>Next / last {value} days</option>)}</select></label>
+        <label>Client<select name="client" defaultValue={clientId ?? ""}><option value="">All clients</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</select></label>
+        <div className="filter-actions"><button className="button button-primary button-small" type="submit">Apply</button><Link className="text-button" href="/dashboard">Reset</Link></div>
+      </form>
       <div className="stats-grid dashboard-stats">
         <Card className="stat-card"><span className="stat-label">REAL CASH</span><strong className="stat-value">{formatMoney(forecast.referenceBalance)}</strong><Link className="table-link" href="/cash">View movements →</Link></Card>
-        <Card className="stat-card"><span className="stat-label">FORECAST · 30 DAYS</span><strong className={`stat-value ${forecast.points[30].balance.isNegative() ? "negative" : ""}`}>{formatMoney(forecast.points[30].balance)}</strong><Link className="table-link" href="/forecasts">View forecast →</Link></Card>
-        <Card className="stat-card"><span className="stat-label">OUTSTANDING INVOICES</span><strong className="stat-value">{formatMoney(outstandingAmount)}</strong><span className="stat-detail">{outstandingInvoices.length} unpaid invoice{outstandingInvoices.length === 1 ? "" : "s"}</span></Card>
+        <Card className="stat-card"><span className="stat-label">FORECAST · {period} DAYS</span><strong className={`stat-value ${forecast.points[period].balance.isNegative() ? "negative" : ""}`}>{formatMoney(forecast.points[period].balance)}</strong><Link className="table-link" href="/forecasts">View forecast →</Link></Card>
+        <Card className="stat-card"><span className="stat-label">COLLECTED · LAST {period} DAYS</span><strong className="stat-value">{formatMoney(collectedInPeriod)}</strong><span className="stat-detail">{periodPayments.length} payment{periodPayments.length === 1 ? "" : "s"}{selectedClient ? ` · ${selectedClient.name}` : ""}</span></Card>
+        <Card className="stat-card"><span className="stat-label">OUTSTANDING INVOICES</span><strong className="stat-value">{formatMoney(outstandingAmount)}</strong><span className="stat-detail">{outstandingInvoices.length} unpaid invoice{outstandingInvoices.length === 1 ? "" : "s"}{selectedClient ? ` · ${selectedClient.name}` : ""}</span></Card>
         <Card className="stat-card"><span className="stat-label">ALERTS</span><strong className={`stat-value ${alertCount > 0 ? "negative" : ""}`}>{alertCount}</strong><span className="stat-detail">Items requiring attention</span></Card>
       </div>
       <div className="dashboard-layout">

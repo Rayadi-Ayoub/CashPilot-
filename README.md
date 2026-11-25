@@ -78,6 +78,22 @@ npx prisma studio    # Inspect the local database
 
 For a new installation or deployment, apply migrations with `npx prisma migrate deploy` before starting the application.
 
+## Audit log, search and filters
+
+- **Audit log** (owner only, menu *Audit log*): every sensitive action is recorded with who, what and when — sign-ins and failed sign-ins, company creation, members, contacts, invoice creation/validation/cancellation, payments, expense submission/approval/refusal/payment, opening balance and cash adjustments. Payments, validations and cancellations write their audit line in the same transaction as the change.
+- **Search and filters**: invoices (number or client, status, due dates), expenses (description, supplier or employee, status, category, dates) and the audit log are searchable and paginated (25 rows per page). The dashboard can be filtered by period (30/60/90 days) and client.
+- The demo seed adds 12 extra clients, 200 draft/cancelled invoices and 80 refused expenses to demonstrate search on a high-volume entity. They do not change cash, forecasts or alerts.
+
+## Tests
+
+```powershell
+npm test                  # All Vitest tests (unit + integration)
+npm run test:integration  # Integration and reliability tests only
+npm run test:coverage     # Tests + coverage report in coverage/index.html
+```
+
+Integration tests use a separate SQLite database (`prisma/test.db`), recreated and migrated before each run; `prisma/dev.db` is never modified.
+
 ## How the calculations work
 
 - **Invoice remainder** = invoice total − all recorded payments.
@@ -96,7 +112,9 @@ Validated financial operations are preserved rather than edited or deleted. Invo
 app/                 Next.js pages and protected receipt/PDF routes
 components/          Shared layout, forms, badges and projection chart
 lib/actions/         Server Actions for validated writes
-lib/                 Authentication, decimal money, cash and forecast engines
+lib/                 Authentication, decimal money, cash and forecast engines,
+                     audit log, payment/invoice services with business rules
+tests/integration/   Vitest integration and reliability tests (real SQLite)
 prisma/              SQLite schema, migrations and demo seed
 data/uploads/        Local protected receipts (not committed)
 ```

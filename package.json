@@ -7,12 +7,13 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "test": "vitest run",
+    "test:integration": "vitest run tests/integration",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
@@ -31,7 +32,6 @@
     "prisma": "^6.16.2",
     "tsx": "^4.20.6",
     "typescript": "^5.7.0",
-    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^5.1.2"
   }
 }

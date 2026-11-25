@@ -1,12 +1,12 @@
 "use server";
 
-import { InvoiceStatus, Prisma } from "@prisma/client";
+import { BusinessRuleError } from "@/lib/businessRules";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCompanyContext, requireManager } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { parseMoney } from "@/lib/money";
-import { invoiceRemaining } from "@/lib/payments";
+import { recordPayment } from "@/lib/paymentService";
 
 function paymentError(message: string, invoiceId?: string): never {
   redirect(`${invoiceId ? `/invoices/${invoiceId}` : "/payments"}?error=${encodeURIComponent(message)}`);
@@ -31,17 +31,18 @@ export async function createPayment(formData: FormData) {
   if (!method) paymentError("Choose a payment method.", invoiceId);
 
   try {
-    await db.$transaction(async (transaction) => {
-      const invoice = await transaction.invoice.findFirst({ where: { id: invoiceId, companyId: company.id }, include: { payments: true } });
-      if (!invoice || invoice.status !== InvoiceStatus.VALIDATED) throw new Error("Payments can only be added to a validated invoice.");
-      const remaining = invoiceRemaining(invoice);
-      if (amount.gt(remaining)) throw new Error(`Payment exceeds the remaining amount of ${remaining.toFixed(2)} DT.`);
-      await transaction.payment.create({
-        data: { companyId: company.id, invoiceId, amount, paidAt: new Date(`${paymentDate}T00:00:00.000Z`), method, reference, recordedById: user.id },
-      });
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    await recordPayment(db, {
+      companyId: company.id,
+      invoiceId,
+      recordedById: user.id,
+      amount,
+      paidAt: new Date(`${paymentDate}T00:00:00.000Z`),
+      method,
+      reference,
+    });
   } catch (error) {
-    paymentError((error as Error).message, invoiceId);
+    const message = error instanceof BusinessRuleError ? error.message : "The payment could not be recorded. Please try again.";
+    paymentError(message, invoiceId);
   }
 
   revalidatePath("/payments");

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { canManage, getCompanyContext } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { AuditAction, logAudit } from "@/lib/audit";
 
 function approvalError(expenseId: string, message: string): never {
   redirect(`/expenses/${expenseId}?error=${encodeURIComponent(message)}`);
@@ -24,6 +25,7 @@ export async function reviewExpense(formData: FormData) {
     data: { status: decision === "APPROVE" ? ExpenseStatus.APPROVED : ExpenseStatus.REJECTED, reviewedById: user.id, reviewedAt: new Date(), reviewNote: note },
   });
   if (result.count !== 1) approvalError(expenseId, "Only a pending expense can be reviewed.");
+  await logAudit({ companyId: company.id, userId: user.id, action: decision === "APPROVE" ? AuditAction.EXPENSE_APPROVED : AuditAction.EXPENSE_REJECTED, entity: "Expense", entityId: expenseId, details: note });
   revalidatePath("/expenses");
   revalidatePath(`/expenses/${expenseId}`);
   redirect(`/expenses/${expenseId}?success=Expense ${decision === "APPROVE" ? "approved" : "refused"}.`);
@@ -41,6 +43,7 @@ export async function markExpensePaid(formData: FormData) {
     data: { status: ExpenseStatus.PAID, paidAt: new Date(`${paymentDate}T00:00:00.000Z`), paidById: user.id },
   });
   if (result.count !== 1) approvalError(expenseId, "Only an approved, unpaid expense can be recorded as paid. Refused expenses cannot be paid.");
+  await logAudit({ companyId: company.id, userId: user.id, action: AuditAction.EXPENSE_PAID, entity: "Expense", entityId: expenseId, details: `Paid on ${paymentDate}` });
   revalidatePath("/expenses");
   revalidatePath(`/expenses/${expenseId}`);
   redirect(`/expenses/${expenseId}?success=Expense payment recorded.`);

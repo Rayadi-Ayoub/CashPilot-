@@ -15,5 +15,6 @@ AGENTS.md
 context/
 README-Spec-driven-developement.md
 
-# Test reports
+# Base de test et rapports
+prisma/test.db*
 coverage/

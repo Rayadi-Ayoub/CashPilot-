@@ -45,6 +45,7 @@ model User {
   paidExpenses     Expense[]       @relation("ExpensePayment")
   cashAdjustments  CashAdjustment[]
   simulations      Simulation[]
+  auditLogs        AuditLog[]
 }
 
 model Company {
@@ -60,6 +61,7 @@ model Company {
   expenses           Expense[]
   cashAdjustments    CashAdjustment[]
   simulations        Simulation[]
+  auditLogs          AuditLog[]
 }
 
 model Membership {
@@ -208,4 +210,20 @@ model Simulation {
   createdBy            User      @relation(fields: [createdById], references: [id], onDelete: Restrict)
 
   @@index([companyId, createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  companyId String
+  userId    String
+  action    String
+  entity    String
+  entityId  String   @default("")
+  details   String   @default("")
+  createdAt DateTime @default(now())
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([companyId, createdAt])
+  @@index([companyId, action])
 }

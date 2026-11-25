@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { AuditAction, logAudit } from "@/lib/audit";
 import { getCompanyContext, requireOwner } from "@/lib/auth";
 
 function value(formData: FormData, key: string) {
@@ -46,6 +47,7 @@ export async function register(formData: FormData) {
     const company = await transaction.company.create({
       data: { name: companyName, initialBalance, initialBalanceSetAt: new Date(), memberships: { create: { userId: user.id, role: Role.OWNER } } },
     });
+    await logAudit({ companyId: company.id, userId: user.id, action: AuditAction.REGISTER, entity: "Company", entityId: company.id, details: `${companyName} · opening balance ${initialBalance} DT` }, transaction);
     return { user, company };
   });
   await createSession(result.user.id, result.company.id);
@@ -57,9 +59,13 @@ export async function login(formData: FormData) {
   const password = value(formData, "password");
   const user = await db.user.findUnique({ where: { email }, include: { memberships: true } });
   if (!user || !(await bcrypt.compare(password, user.passwordHash)) || user.memberships.length === 0) {
+    if (user && user.memberships.length > 0) {
+      await logAudit({ companyId: user.memberships[0].companyId, userId: user.id, action: AuditAction.LOGIN_FAILED, entity: "User", entityId: user.id, details: "Wrong password" });
+    }
     redirect("/login?error=Invalid email or password.");
   }
   await createSession(user.id, user.memberships[0].companyId);
+  await logAudit({ companyId: user.memberships[0].companyId, userId: user.id, action: AuditAction.LOGIN, entity: "User", entityId: user.id });
   redirect("/dashboard");
 }
 
@@ -82,7 +88,7 @@ export async function switchCompany(formData: FormData) {
 }
 
 export async function addMember(formData: FormData) {
-  const { company, role: currentRole } = await getCompanyContext();
+  const { company, role: currentRole, user: currentUser } = await getCompanyContext();
   requireOwner(currentRole);
   const name = value(formData, "name");
   const email = value(formData, "email").toLowerCase();
@@ -104,6 +110,7 @@ export async function addMember(formData: FormData) {
     data: { name, email, passwordHash: await bcrypt.hash(password, 12) },
   });
   await db.membership.create({ data: { userId: user.id, companyId: company.id, role: role as Role } });
+  await logAudit({ companyId: company.id, userId: currentUser.id, action: AuditAction.MEMBER_ADDED, entity: "User", entityId: user.id, details: `${email} as ${role}` });
   revalidatePath("/company");
   redirect("/company?success=Member added. They can now sign in.");
 }

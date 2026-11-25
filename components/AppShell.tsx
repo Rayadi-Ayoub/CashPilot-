@@ -27,6 +27,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           {canManage(role) && <NavLink href="/forecasts">Cash forecasts</NavLink>}
           {canManage(role) && <NavLink href="/simulation">What-if simulation</NavLink>}
           <NavLink href="/company">Company & access</NavLink>
+          {role === "OWNER" && <NavLink href="/audit">Audit log</NavLink>}
         </nav>
         <div className="sidebar-user">
           <strong>{user.name}</strong>
