@@ -1,0 +1,16 @@
+services:
+  cashpilot:
+    image: cashpilot:local
+    build: .
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      DATABASE_URL: "file:/app/data/db/cashpilot.db"
+    volumes:
+      - cashpilot-db:/app/data/db
+      - cashpilot-uploads:/app/data/uploads
+    command: ["sh", "-c", "npx prisma migrate deploy && npm start"]
+
+volumes:
+  cashpilot-db:
+  cashpilot-uploads:
