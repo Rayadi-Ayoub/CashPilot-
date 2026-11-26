@@ -10,6 +10,39 @@ import { db } from "@/lib/db";
 import { AuditAction, logAudit } from "@/lib/audit";
 import { getCompanyContext, requireOwner } from "@/lib/auth";
 
+const LOGIN_ATTEMPTS = new Map<string, { count: number; firstAttempt: number }>();
+
+function checkRateLimit(email: string): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const record = LOGIN_ATTEMPTS.get(email);
+  const windowMs = 15 * 60 * 1000;
+  const maxAttempts = 5;
+
+  if (!record || now - record.firstAttempt > windowMs) {
+    LOGIN_ATTEMPTS.set(email, { count: 1, firstAttempt: now });
+    return { allowed: true, remaining: maxAttempts - 1 };
+  }
+
+  if (record.count >= maxAttempts) {
+    return { allowed: false, remaining: 0 };
+  }
+
+  record.count += 1;
+  return { allowed: true, remaining: maxAttempts - record.count };
+}
+
+function recordFailedLogin(email: string) {
+  const now = Date.now();
+  const record = LOGIN_ATTEMPTS.get(email);
+  const windowMs = 15 * 60 * 1000;
+
+  if (!record || now - record.firstAttempt > windowMs) {
+    LOGIN_ATTEMPTS.set(email, { count: 1, firstAttempt: now });
+  } else {
+    record.count += 1;
+  }
+}
+
 function value(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
@@ -57,13 +90,29 @@ export async function register(formData: FormData) {
 export async function login(formData: FormData) {
   const email = value(formData, "email").toLowerCase();
   const password = value(formData, "password");
+
+  const rateLimit = checkRateLimit(email);
+  if (!rateLimit.allowed) {
+    await logAudit({
+      companyId: "",
+      userId: "",
+      action: AuditAction.LOGIN_FAILED,
+      entity: "User",
+      entityId: email,
+      details: `Rate limit exceeded for ${email}`,
+    });
+    redirect("/login?error=Trop de tentatives de connexion. Réessayez dans 15 minutes.");
+  }
+
   const user = await db.user.findUnique({ where: { email }, include: { memberships: true } });
   if (!user || !(await bcrypt.compare(password, user.passwordHash)) || user.memberships.length === 0) {
+    recordFailedLogin(email);
     if (user && user.memberships.length > 0) {
       await logAudit({ companyId: user.memberships[0].companyId, userId: user.id, action: AuditAction.LOGIN_FAILED, entity: "User", entityId: user.id, details: "Wrong password" });
     }
     redirect("/login?error=Invalid email or password.");
   }
+  LOGIN_ATTEMPTS.delete(email);
   await createSession(user.id, user.memberships[0].companyId);
   await logAudit({ companyId: user.memberships[0].companyId, userId: user.id, action: AuditAction.LOGIN, entity: "User", entityId: user.id });
   redirect("/dashboard");

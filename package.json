@@ -31,6 +31,8 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitest/coverage-v8": "^5.1.2",
+    "newman": "^6.2.3",
+    "newman-reporter-htmlextra": "^1.23.1",
     "prisma": "^6.16.2",
     "tsx": "^4.20.6",
     "typescript": "^5.7.0",
