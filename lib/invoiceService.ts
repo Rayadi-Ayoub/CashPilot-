@@ -1,6 +1,7 @@
 import { InvoiceStatus, Prisma, PrismaClient } from "@prisma/client";
 import { AuditAction, logAudit } from "./audit";
 import { BusinessRuleError } from "./businessRules";
+import { canCancelInvoice, canValidateInvoice, isValidCancellationReason } from "./invoices";
 
 /**
  * Valide un brouillon : attribue un numéro unique (RM3) et trace l'action.
@@ -8,7 +9,7 @@ import { BusinessRuleError } from "./businessRules";
 export async function validateInvoiceRecord(client: PrismaClient, input: { companyId: string; invoiceId: string; userId: string }) {
   return client.$transaction(async (transaction) => {
     const invoice = await transaction.invoice.findFirst({ where: { id: input.invoiceId, companyId: input.companyId } });
-    if (!invoice || invoice.status !== InvoiceStatus.DRAFT) {
+    if (!invoice || !canValidateInvoice(invoice.status)) {
       throw new BusinessRuleError("WORKFLOW", "Only a draft invoice can be validated.");
     }
     const count = await transaction.invoice.count({ where: { companyId: input.companyId, number: { not: null } } });
@@ -29,13 +30,13 @@ export async function validateInvoiceRecord(client: PrismaClient, input: { compa
  */
 export async function cancelInvoiceRecord(client: PrismaClient, input: { companyId: string; invoiceId: string; userId: string; reason: string }) {
   const reason = input.reason.trim();
-  if (!reason) throw new BusinessRuleError("RM2", "A cancellation reason is required to preserve the audit history.");
+  if (!isValidCancellationReason(reason)) throw new BusinessRuleError("RM2", "A cancellation reason is required to preserve the audit history.");
   return client.$transaction(async (transaction) => {
     const invoice = await transaction.invoice.findFirst({ where: { id: input.invoiceId, companyId: input.companyId }, include: { payments: true } });
     if (!invoice || invoice.status === InvoiceStatus.CANCELLED) {
       throw new BusinessRuleError("WORKFLOW", "This invoice is already cancelled or unavailable.");
     }
-    if (invoice.payments.length > 0) {
+    if (!canCancelInvoice(invoice.status, invoice.payments.length)) {
       throw new BusinessRuleError("RM2", "An invoice with recorded payments cannot be cancelled. Its payment history must be preserved.");
     }
     const updated = await transaction.invoice.update({
