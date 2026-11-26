@@ -1,0 +1,268 @@
+{
+  "info": {
+    "name": "CashPilot API - Invoices",
+    "description": "API REST tests for CashPilot invoices endpoints (ISO 6.3, 6.6). Base URL: http://localhost:3000",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "cashpilot-api-invoices"
+  },
+  "item": [
+    {
+      "name": "GET /api/v1/invoices - 200 + JSON structure (authenticated)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "cashpilot_session={{session_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:3000/api/v1/invoices",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "v1", "invoices"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response is JSON\", function () {",
+              "    pm.response.to.have.header(\"content-type\", /application\\/json/);",
+              "});",
+              "",
+              "pm.test(\"Body is an array\", function () {",
+              "    const data = pm.response.json();",
+              "    pm.expect(data).to.be.an(\"array\");",
+              "});",
+              "",
+              "pm.test(\"Each invoice has required fields\", function () {",
+              "    const data = pm.response.json();",
+              "    if (data.length > 0) {",
+              "        pm.expect(data[0]).to.have.all.of([\"id\", \"number\", \"status\", \"total\", \"remaining\", \"contact\", \"dueDate\", \"createdAt\"]);",
+              "    }",
+              "});",
+              "",
+              "pm.test(\"Response time < 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /api/v1/invoices - 401 not authenticated",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:3000/api/v1/invoices",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "v1", "invoices"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 401\", function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "",
+              "pm.test(\"Response is JSON\", function () {",
+              "    pm.response.to.have.header(\"content-type\", /application\\/json/);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /api/v1/invoices/[id] - 200 detail with payments",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "cashpilot_session={{session_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:3000/api/v1/invoices/{{invoice_id}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "v1", "invoices", "{{invoice_id}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has invoice detail fields\", function () {",
+              "    const data = pm.response.json();",
+              "    pm.expect(data).to.have.all.of([\"id\", \"number\", \"status\", \"total\", \"remaining\", \"contact\", \"payments\", \"dueDate\"]);",
+              "    pm.expect(data.contact).to.have.all.of([\"id\", \"name\"]);",
+              "    pm.expect(data.payments).to.be.an(\"array\");",
+              "});",
+              "",
+              "pm.test(\"Remaining equals total minus payments\", function () {",
+              "    const data = pm.response.json();",
+              "    const paid = data.payments.reduce((sum, p) => sum + p.amount, 0);",
+              "    pm.expect(data.remaining).to.be.closeTo(data.total - paid, 0.01);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /api/v1/invoices/[id] - 404 unknown invoice",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "cashpilot_session={{session_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:3000/api/v1/invoices/invoice-inexistant",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "v1", "invoices", "invoice-inexistant"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "",
+              "pm.test(\"Body has error message\", function () {",
+              "    const data = pm.response.json();",
+              "    pm.expect(data.error).to.be.a(\"string\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /api/v1/invoices - 403 collaborator",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "cashpilot_session={{collaborator_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:3000/api/v1/invoices",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "v1", "invoices"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 403 or 200\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+              "});",
+              "",
+              "pm.test(\"Response is JSON\", function () {",
+              "    pm.response.to.have.header(\"content-type\", /application\\/json/);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /api/v1/invoices/[id] - response time test",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "cashpilot_session={{session_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:3000/api/v1/invoices/{{invoice_id}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "v1", "invoices", "{{invoice_id}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response time < 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "session_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "collaborator_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "invoice_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

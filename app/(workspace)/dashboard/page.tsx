@@ -6,6 +6,7 @@ import { getForecastData } from "@/lib/forecast";
 import { invoiceRemaining } from "@/lib/payments";
 import { expenseStatusLabels, expenseStatusTone } from "@/lib/expenses";
 import { sumMoney } from "@/lib/money";
+import { getEurRate } from "@/lib/currency";
 import { Card, EmptyState, PageHeader, StatusBadge } from "@/components/ui";
 import { formatDate, formatMoney } from "@/lib/format";
 
@@ -29,7 +30,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   // Filtres du tableau de bord : période (30/60/90 jours) et client.
   const params = await searchParams;
   const period = PERIODS.find((value) => String(value) === params.period) ?? 30;
-  const forecast = await getForecastData(company.id);
+  const [forecast, eurRate] = await Promise.all([
+    getForecastData(company.id),
+    canManage(role) ? getEurRate() : Promise.resolve({ rate: null, source: "indisponible" }),
+  ]);
   const clients = await db.contact.findMany({ where: { companyId: company.id, type: ContactType.CLIENT }, orderBy: { name: "asc" } });
   const clientId = clients.some((client) => client.id === params.client) ? params.client : undefined;
   const periodStart = new Date(forecast.referenceDate.getTime() - period * 24 * 60 * 60 * 1000);
@@ -60,6 +64,21 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <Card className="stat-card"><span className="stat-label">COLLECTED · LAST {period} DAYS</span><strong className="stat-value">{formatMoney(collectedInPeriod)}</strong><span className="stat-detail">{periodPayments.length} payment{periodPayments.length === 1 ? "" : "s"}{selectedClient ? ` · ${selectedClient.name}` : ""}</span></Card>
         <Card className="stat-card"><span className="stat-label">OUTSTANDING INVOICES</span><strong className="stat-value">{formatMoney(outstandingAmount)}</strong><span className="stat-detail">{outstandingInvoices.length} unpaid invoice{outstandingInvoices.length === 1 ? "" : "s"}{selectedClient ? ` · ${selectedClient.name}` : ""}</span></Card>
         <Card className="stat-card"><span className="stat-label">ALERTS</span><strong className={`stat-value ${alertCount > 0 ? "negative" : ""}`}>{alertCount}</strong><span className="stat-detail">Items requiring attention</span></Card>
+        {canManage(role) && (
+          <Card className="stat-card"><span className="stat-label">SOLDE EN EUR</span>
+            {eurRate.rate ? (
+              <>
+                <strong className="stat-value">{formatMoney(Number(forecast.referenceBalance) * eurRate.rate)} EUR</strong>
+                <span className="stat-detail">{formatMoney(forecast.referenceBalance)} DT × {eurRate.rate.toFixed(4)} · {eurRate.source}</span>
+              </>
+            ) : (
+              <>
+                <strong className="stat-value">Taux indisponible</strong>
+                <span className="stat-detail">API de change jointe : {eurRate.source}</span>
+              </>
+            )}
+          </Card>
+        )}
       </div>
       <div className="dashboard-layout">
         <div className="action-stack">
