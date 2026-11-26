@@ -22,3 +22,6 @@ playwright-report/
 test-results/
 playwright/.cache/
 playwright/.auth/
+
+# Dossier créé par l'application Claude (hors projet)
+Claude outputs/

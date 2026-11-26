@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "CashPilot API - Invoices",
-    "description": "API REST tests for CashPilot invoices endpoints (ISO 6.3, 6.6). Base URL: http://localhost:3000",
+    "description": "API REST tests for CashPilot invoices (ISO 6.3 API contract, ISO 6.6 access control: 401 without session, 403 for collaborators, 404 for unknown or other-company invoices). Run with tests/api/run-newman.sh.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_postman_id": "cashpilot-api-invoices"
   },
@@ -20,9 +20,15 @@
         "url": {
           "raw": "http://localhost:3000/api/v1/invoices",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": [
+            "localhost"
+          ],
           "port": "3000",
-          "path": ["api", "v1", "invoices"]
+          "path": [
+            "api",
+            "v1",
+            "invoices"
+          ]
         }
       },
       "event": [
@@ -36,7 +42,7 @@
               "});",
               "",
               "pm.test(\"Response is JSON\", function () {",
-              "    pm.response.to.have.header(\"content-type\", /application\\/json/);",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
               "});",
               "",
               "pm.test(\"Body is an array\", function () {",
@@ -47,7 +53,7 @@
               "pm.test(\"Each invoice has required fields\", function () {",
               "    const data = pm.response.json();",
               "    if (data.length > 0) {",
-              "        pm.expect(data[0]).to.have.all.of([\"id\", \"number\", \"status\", \"total\", \"remaining\", \"contact\", \"dueDate\", \"createdAt\"]);",
+              "        pm.expect(data[0]).to.include.all.keys([\"id\", \"number\", \"status\", \"total\", \"remaining\", \"contact\", \"dueDate\", \"createdAt\"]);",
               "    }",
               "});",
               "",
@@ -66,9 +72,15 @@
         "url": {
           "raw": "http://localhost:3000/api/v1/invoices",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": [
+            "localhost"
+          ],
           "port": "3000",
-          "path": ["api", "v1", "invoices"]
+          "path": [
+            "api",
+            "v1",
+            "invoices"
+          ]
         }
       },
       "event": [
@@ -81,8 +93,9 @@
               "    pm.response.to.have.status(401);",
               "});",
               "",
-              "pm.test(\"Response is JSON\", function () {",
-              "    pm.response.to.have.header(\"content-type\", /application\\/json/);",
+              "pm.test(\"Response is JSON with an error\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "    pm.expect(pm.response.json().error).to.equal(\"Authentication required.\");",
               "});"
             ]
           }
@@ -103,9 +116,16 @@
         "url": {
           "raw": "http://localhost:3000/api/v1/invoices/{{invoice_id}}",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": [
+            "localhost"
+          ],
           "port": "3000",
-          "path": ["api", "v1", "invoices", "{{invoice_id}}"]
+          "path": [
+            "api",
+            "v1",
+            "invoices",
+            "{{invoice_id}}"
+          ]
         }
       },
       "event": [
@@ -120,8 +140,8 @@
               "",
               "pm.test(\"Response has invoice detail fields\", function () {",
               "    const data = pm.response.json();",
-              "    pm.expect(data).to.have.all.of([\"id\", \"number\", \"status\", \"total\", \"remaining\", \"contact\", \"payments\", \"dueDate\"]);",
-              "    pm.expect(data.contact).to.have.all.of([\"id\", \"name\"]);",
+              "    pm.expect(data).to.include.all.keys([\"id\", \"number\", \"status\", \"total\", \"remaining\", \"contact\", \"payments\", \"dueDate\"]);",
+              "    pm.expect(data.contact).to.include.all.keys([\"id\", \"name\"]);",
               "    pm.expect(data.payments).to.be.an(\"array\");",
               "});",
               "",
@@ -149,9 +169,16 @@
         "url": {
           "raw": "http://localhost:3000/api/v1/invoices/invoice-inexistant",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": [
+            "localhost"
+          ],
           "port": "3000",
-          "path": ["api", "v1", "invoices", "invoice-inexistant"]
+          "path": [
+            "api",
+            "v1",
+            "invoices",
+            "invoice-inexistant"
+          ]
         }
       },
       "event": [
@@ -187,9 +214,15 @@
         "url": {
           "raw": "http://localhost:3000/api/v1/invoices",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": [
+            "localhost"
+          ],
           "port": "3000",
-          "path": ["api", "v1", "invoices"]
+          "path": [
+            "api",
+            "v1",
+            "invoices"
+          ]
         }
       },
       "event": [
@@ -198,12 +231,58 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"Status is 403 or 200\", function () {",
-              "    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+              "pm.test(\"Status is 403 (collaborator has no access to invoices)\", function () {",
+              "    pm.response.to.have.status(403);",
               "});",
               "",
-              "pm.test(\"Response is JSON\", function () {",
-              "    pm.response.to.have.header(\"content-type\", /application\\/json/);",
+              "pm.test(\"Response is JSON with an error\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "    pm.expect(pm.response.json().error).to.be.a(\"string\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /api/v1/invoices/[id] - 403 collaborator",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "cashpilot_session={{collaborator_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:3000/api/v1/invoices/{{invoice_id}}",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "v1",
+            "invoices",
+            "{{invoice_id}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 403 (collaborator has no access to invoices)\", function () {",
+              "    pm.response.to.have.status(403);",
+              "});",
+              "",
+              "pm.test(\"Response is JSON with an error\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "    pm.expect(pm.response.json().error).to.be.a(\"string\");",
               "});"
             ]
           }
@@ -224,9 +303,16 @@
         "url": {
           "raw": "http://localhost:3000/api/v1/invoices/{{invoice_id}}",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": [
+            "localhost"
+          ],
           "port": "3000",
-          "path": ["api", "v1", "invoices", "{{invoice_id}}"]
+          "path": [
+            "api",
+            "v1",
+            "invoices",
+            "{{invoice_id}}"
+          ]
         }
       },
       "event": [

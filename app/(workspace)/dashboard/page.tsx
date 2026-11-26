@@ -11,6 +11,7 @@ import { Card, EmptyState, PageHeader, StatusBadge } from "@/components/ui";
 import { formatDate, formatMoney } from "@/lib/format";
 
 const PERIODS = [30, 60, 90] as const;
+const formatEur = (value: number) => new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" }).format(value);
 type SearchParams = { period?: string; client?: string };
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
@@ -65,16 +66,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <Card className="stat-card"><span className="stat-label">OUTSTANDING INVOICES</span><strong className="stat-value">{formatMoney(outstandingAmount)}</strong><span className="stat-detail">{outstandingInvoices.length} unpaid invoice{outstandingInvoices.length === 1 ? "" : "s"}{selectedClient ? ` · ${selectedClient.name}` : ""}</span></Card>
         <Card className="stat-card"><span className="stat-label">ALERTS</span><strong className={`stat-value ${alertCount > 0 ? "negative" : ""}`}>{alertCount}</strong><span className="stat-detail">Items requiring attention</span></Card>
         {canManage(role) && (
-          <Card className="stat-card"><span className="stat-label">SOLDE EN EUR</span>
+          <Card className="stat-card"><span className="stat-label">REAL CASH IN EUR</span>
             {eurRate.rate ? (
               <>
-                <strong className="stat-value">{formatMoney(Number(forecast.referenceBalance) * eurRate.rate)} EUR</strong>
-                <span className="stat-detail">{formatMoney(forecast.referenceBalance)} DT × {eurRate.rate.toFixed(4)} · {eurRate.source}</span>
+                <strong className="stat-value">{formatEur(Number(forecast.referenceBalance) * eurRate.rate)}</strong>
+                <span className="stat-detail">1 TND = {eurRate.rate.toFixed(4)} EUR · {eurRate.source}</span>
               </>
             ) : (
               <>
-                <strong className="stat-value">Taux indisponible</strong>
-                <span className="stat-detail">API de change jointe : {eurRate.source}</span>
+                <strong className="stat-value">Rate unavailable</strong>
+                <span className="stat-detail">Exchange-rate API unreachable · app still works</span>
               </>
             )}
           </Card>

@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { getCompanyContext } from "@/lib/auth";
+import { requireApiManager } from "@/lib/apiAuth";
 import { db } from "@/lib/db";
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { company } = await getCompanyContext();
+  const auth = await requireApiManager();
+  if (auth.error) return auth.error;
+  const { company } = auth;
   const { id } = await params;
 
   const invoice = await db.invoice.findFirst({
