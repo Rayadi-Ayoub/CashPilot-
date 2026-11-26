@@ -102,3 +102,24 @@ data/uploads/        Local protected receipts (not committed)
 ```
 
 Every company-scoped query begins with the signed-in user's active company membership. Collaborators additionally receive only their own expense records. Server Actions repeat permission checks so hiding navigation links is not the only protection.
+## Lancer CashPilot avec Docker
+
+1. Ouvrir Docker Desktop et attendre que le moteur soit prêt.
+2. Ouvrir un terminal dans le dossier CashPilot, puis lancer :
+
+   ```bash
+   docker compose up -d --build
+    
+   ```
+
+3. Pour initialiser une nouvelle base de démo, attendre que l’application soit prête, puis lancer :
+
+   ```bash
+   docker compose exec cashpilot npm run db:seed
+   ```
+
+   Le seed peut réinitialiser les données de démo. Pour les démarrages suivants, utiliser `docker compose up -d`.
+
+4. Ouvrir http://localhost:3000/login et se connecter avec le compte de démo `owner@cashpilot.demo` et le mot de passe `demo1234`.
+
+Pour arrêter CashPilot en conservant ses données, utiliser `docker compose stop`.
